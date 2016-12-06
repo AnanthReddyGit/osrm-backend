@@ -34,6 +34,8 @@ module.exports = function () {
                         json = JSON.parse(res.body);
                     }
 
+                    console.log(json);
+
                     if (headers.has('status')) {
                         got.status = json.status.toString();
                     }
@@ -49,6 +51,15 @@ module.exports = function () {
                             got.geometry = polyline.decode(json.trips[0].geometry, 6).toString();
                         } else {
                             got.geometry = json.trips[0].geometry.coordinates;
+                        }
+                    }
+
+                    if (headers.has('source') && headers.has('destination')) {
+                        if (this.queryParams['source']) {
+                            got.source = json.trips[0].source;
+                        }
+                        if (this.queryParams['destination']) {
+                            got.source = json.trips[0].destination;
                         }
                     }
 

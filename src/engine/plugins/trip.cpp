@@ -147,6 +147,9 @@ Status TripPlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
 {
     BOOST_ASSERT(parameters.IsValid());
 
+    std::cout << "parameters " << std::endl;
+    std::cout << "parameters.source: " << parameters.source << std::endl;
+    std::cout << "parameters.destination: " << parameters.destination << std::endl;
     // enforce maximum number of locations for performance reasons
     if (max_locations_trip > 0 &&
         static_cast<int>(parameters.coordinates.size()) > max_locations_trip)

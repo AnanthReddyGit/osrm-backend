@@ -26,11 +26,20 @@ struct TripParametersGrammar final : public RouteParametersGrammar<Iterator, Sig
 
     TripParametersGrammar() : BaseGrammar(root_rule)
     {
+
+        source_rule = (qi::lit("source=") >
+                qi::uint_)[ph::bind(&engine::api::TripParameters::source, qi::_r1) = qi::_1];
+
+        destination_rule = (qi::lit("destination=") >
+                qi::uint_)[ph::bind(&engine::api::TripParameters::destination, qi::_r1) = qi::_1];
+
         root_rule = BaseGrammar::query_rule(qi::_r1) > -qi::lit(".json") >
                     -('?' > (BaseGrammar::base_rule(qi::_r1)) % '&');
     }
 
   private:
+    qi::rule<Iterator, Signature> source_rule;
+    qi::rule<Iterator, Signature> destination_rule;
     qi::rule<Iterator, Signature> root_rule;
 };
 }
