@@ -61,7 +61,7 @@ struct TripParameters : public RouteParameters
     }
 
     template <typename... Args>
-    TripParameters(int source_, int destination_, Args... args_)
+    TripParameters(int source_, int destination_, Args&&... args_)
         : RouteParameters{std::forward<Args>(args_)...}, source{source_}, destination{destination_}
     {
     }
