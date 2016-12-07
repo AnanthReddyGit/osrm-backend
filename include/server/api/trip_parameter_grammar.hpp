@@ -35,7 +35,7 @@ struct TripParametersGrammar final : public RouteParametersGrammar<Iterator, Sig
                             qi::uint_)[ph::bind(&engine::api::TripParameters::destination, qi::_r1) = qi::_1];
 
         root_rule = BaseGrammar::query_rule(qi::_r1) > -qi::lit(".json") >
-                    -('?' > (BaseGrammar::base_rule(qi::_r1)) % '&');
+            -('?' > ((source_rule(qi::_r1) | destination_rule(qi::_r1) | BaseGrammar::base_rule(qi::_r1))) % '&');
     }
 
   private:
