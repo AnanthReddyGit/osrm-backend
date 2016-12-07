@@ -4,6 +4,7 @@
 #include "server/api/route_parameters_grammar.hpp"
 #include "engine/api/trip_parameters.hpp"
 
+#include <boost/spirit/include/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
 
 namespace osrm
@@ -15,6 +16,7 @@ namespace api
 
 namespace
 {
+namespace ph = boost::phoenix;
 namespace qi = boost::spirit::qi;
 }
 
@@ -26,12 +28,11 @@ struct TripParametersGrammar final : public RouteParametersGrammar<Iterator, Sig
 
     TripParametersGrammar() : BaseGrammar(root_rule)
     {
-
         source_rule = (qi::lit("source=") >
-                qi::uint_)[ph::bind(&engine::api::TripParameters::source, qi::_r1) = qi::_1];
+                       qi::uint_)[ph::bind(&engine::api::TripParameters::source, qi::_r1) = qi::_1];
 
         destination_rule = (qi::lit("destination=") >
-                qi::uint_)[ph::bind(&engine::api::TripParameters::destination, qi::_r1) = qi::_1];
+                            qi::uint_)[ph::bind(&engine::api::TripParameters::destination, qi::_r1) = qi::_1];
 
         root_rule = BaseGrammar::query_rule(qi::_r1) > -qi::lit(".json") >
                     -('?' > (BaseGrammar::base_rule(qi::_r1)) % '&');

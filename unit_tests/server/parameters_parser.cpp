@@ -437,7 +437,10 @@ BOOST_AUTO_TEST_CASE(valid_trip_urls)
     reference_2.coordinates = coords_1;
     reference_2.source = 1;
     reference_2.destination = 2;
+    std::cout << "I get to this point" << std::endl;
     auto result_2 = parseParameters<TripParameters>("1,2;3,4?source=1&destination=2");
+    std::cout << "result_2->source is " << result_2->source << " end of result_2->source. " << std::endl;
+    std::cout << "result_2->destination is " << result_2->destination << std::endl;
     BOOST_CHECK(result_2);
     BOOST_CHECK_EQUAL(reference_2.source, result_2->source);
     BOOST_CHECK_EQUAL(reference_2.destination, result_2->destination);
