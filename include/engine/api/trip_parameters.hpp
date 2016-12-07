@@ -28,8 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef ENGINE_API_TRIP_PARAMETERS_HPP
 #define ENGINE_API_TRIP_PARAMETERS_HPP
 
-#define BOOST_SPIRIT_DEBUG
-
 #include "engine/api/route_parameters.hpp"
 
 #include <vector>
