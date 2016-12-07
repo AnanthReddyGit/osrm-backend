@@ -96,6 +96,7 @@ struct BaseParameters
                            });
     }
 };
+inline std::ostream& operator<<(std::ostream& out, const BaseParameters&) { return out << "BaseParameters()"; }
 }
 }
 }

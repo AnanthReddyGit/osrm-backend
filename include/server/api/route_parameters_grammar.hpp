@@ -63,6 +63,8 @@ struct RouteParametersGrammar : public BaseParametersGrammar<Iterator, Signature
              overview_type[ph::bind(&engine::api::RouteParameters::overview, qi::_r1) = qi::_1]);
 
         query_rule = BaseGrammar::query_rule(qi::_r1);
+
+        BOOST_SPIRIT_DEBUG_NODES((base_rule)(query_rule));
     }
 
   protected:

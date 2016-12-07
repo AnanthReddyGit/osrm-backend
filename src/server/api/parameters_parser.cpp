@@ -1,3 +1,5 @@
+#define BOOST_SPIRIT_DEBUG
+
 #include "server/api/parameters_parser.hpp"
 
 #include "server/api/match_parameter_grammar.hpp"

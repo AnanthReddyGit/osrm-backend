@@ -36,6 +36,8 @@ struct TripParametersGrammar final : public RouteParametersGrammar<Iterator, Sig
 
         root_rule = BaseGrammar::query_rule(qi::_r1) > -qi::lit(".json") >
             -('?' > ((source_rule(qi::_r1) | destination_rule(qi::_r1) | BaseGrammar::base_rule(qi::_r1))) % '&');
+
+        BOOST_SPIRIT_DEBUG_NODES((source_rule)(destination_rule)(root_rule));
     }
 
   private:

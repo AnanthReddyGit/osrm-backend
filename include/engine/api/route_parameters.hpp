@@ -108,6 +108,7 @@ struct RouteParameters : public BaseParameters
 
     bool IsValid() const { return coordinates.size() >= 2 && BaseParameters::IsValid(); }
 };
+inline std::ostream& operator<<(std::ostream& out, const RouteParameters&) { return out << "RouteParameters()"; }
 }
 }
 }
