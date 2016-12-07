@@ -54,8 +54,9 @@ struct TripParameters : public RouteParameters
                           false,
                           RouteParameters::GeometriesType::Polyline,
                           RouteParameters::OverviewType::Simplified,
-                          0,
-                          0)
+                          {}),
+          source(-1),
+          destination(-1)
     {
     }
 
@@ -70,7 +71,7 @@ struct TripParameters : public RouteParameters
 
     bool IsValid() const
     {
-        return RouteParameters::IsValid() && source > 0  && destination > 0;
+        return RouteParameters::IsValid() && source >= -1  && destination >= -1;
     }
 };
 }
