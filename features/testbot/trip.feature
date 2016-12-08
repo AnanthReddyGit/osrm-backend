@@ -73,9 +73,9 @@ Feature: Basic trip planning
             | da    |
 
         When I plan a trip I should get
-            | waypoints | trips | durations |
+            | waypoints | trips  | durations |
             | a,b,c,d   | abcda  | 7.6       |
-            | d,b,c,a   | dbcaa  | 7.6       |
+            | d,b,c,a   | dbcad  | 7.6       |
 
 
     Scenario: Testbot - Trip planning with more than 10 nodes with fixed start and end
