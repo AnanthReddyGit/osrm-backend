@@ -54,10 +54,10 @@ Feature: Basic trip planning
             | a,b,c,d,e,f,g,h,i,j,k,l | cbalkjihgfedc |
 
 
-    Scenario: Testbot - Trip planning with less than 10 nodes with fixed start and end
+    Scenario: Testbot - Trip planning with fixed start and end
         Given the query options
-            | source        | 1       |
-            | destination   | 4       |
+            | source        | 0       |
+            | destination   | 3       |
 
         Given the node map
             """
@@ -76,40 +76,6 @@ Feature: Basic trip planning
             | waypoints | trips  | durations |
             | a,b,c,d   | abcda  | 7.6       |
             | d,b,c,a   | dbcad  | 7.6       |
-
-
-    Scenario: Testbot - Trip planning with more than 10 nodes with fixed start and end
-        Given the query options
-            | source        | 1       |
-            | destination   | 12      |
-
-        Given the node map
-            """
-            a b c d
-            l     e
-            k     f
-            j i h g
-            """
-
-        And the ways
-            | nodes |
-            | ab    |
-            | bc    |
-            | cb    |
-            | de    |
-            | ef    |
-            | fg    |
-            | gh    |
-            | hi    |
-            | ij    |
-            | jk    |
-            | kl    |
-            | la    |
-
-
-        When I plan a trip I should get
-            | waypoints               | trips         |
-            | a,b,c,d,e,f,g,h,i,j,k,l | cbalkjihgfedc |
 
 
     Scenario: Testbot - Trip planning with multiple scc

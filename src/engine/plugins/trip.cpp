@@ -185,6 +185,10 @@ Status TripPlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
         return Status::Error;
     }
 
+    std::for_each(std::begin(result_table), std::end(result_table), [](const auto value) {
+        std::cout << "table_value: " << value << std::endl;
+      });
+
     const constexpr std::size_t BF_MAX_FEASABLE = 10;
     BOOST_ASSERT_MSG(result_table.size() == number_of_locations * number_of_locations,
                      "Distance Table has wrong size");
