@@ -84,7 +84,7 @@ Feature: Basic trip planning
 
         When I plan a trip I should get
             | waypoints | trips  | durations |
-            | a,b,c,d   | abcd   | 4         |
+            | a,b,c,d   |        |           |
 
 
     Scenario: Testbot - Trip planning with multiple scc
