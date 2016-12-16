@@ -57,25 +57,34 @@ Feature: Basic trip planning
     Scenario: Testbot - Trip planning with fixed start and end
         Given the query options
             | source        | 0       |
-            | destination   | 3       |
+            | destination   | 2       |
 
         Given the node map
             """
-            a b
-            c d
+            a  b
+
+               d
+            c  
             """
 
         And the ways
             | nodes |
             | ab    |
+            | ac    |
+            | ad    |
+            | ba    |
             | bc    |
+            | bd    |
+            | ca    |
             | cb    |
+            | cd    |
             | da    |
+            | db    |
+            | dc    |
 
         When I plan a trip I should get
             | waypoints | trips  | durations |
-            | a,b,c,d   | abcda  | 7.6       |
-            | d,b,c,a   | dbcad  | 7.6       |
+            | a,b,c,d   | abcd   | 4         |
 
 
     Scenario: Testbot - Trip planning with multiple scc
