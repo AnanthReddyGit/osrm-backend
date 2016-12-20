@@ -185,16 +185,50 @@ Status TripPlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
         return Status::Error;
     }
 
-    std::for_each(std::begin(result_table), std::end(result_table), [](const auto value) {
-        std::cout << "table_value: " << value << std::endl;
-      });
-
     const constexpr std::size_t BF_MAX_FEASABLE = 10;
     BOOST_ASSERT_MSG(result_table.size() == number_of_locations * number_of_locations,
                      "Distance Table has wrong size");
 
+    // std::for_each(std::begin(result_table), std::end(result_table), [](const auto value) {
+    //     std::cout << "table_value: " << value << std::endl;
+    //   });
+
+    std::vector<EdgeWeight> ftse_table;
+    const std::size_t number_of_nodes = result_table.GetNumberOfNodes() - 1;
+    ftse_table.reserve(number_of_nodes * number_of_nodes);
+
+    if (parameters.source > -1 && parameters.destination > -1) {
+
+        NodeID from = parameters.source;
+        NodeID to = parameters.destination;
+
+        for (auto index = 0; index < result_table.size(); ++index) {
+            if (index % number_of_nodes == to) { //do the to thing
+                ftse_table[index - to] = result_table[index];
+                index++;
+            }
+
+            // if (index % number_of_nodes == 0) { // do the from thing
+                // index = index + number_of_nodes;
+            // }
+
+            if (to * number_of_nodes == index) { // do the from thing
+                index = index + number_of_nodes;
+            }
+
+            ftse_table[index] = result_table[index];
+        }
+
+        ftse_table[from * number_of_nodes + from] = 0;
+    }
+
     // get scc components
-    SCC_Component scc = SplitUnaccessibleLocations(number_of_locations, result_table);
+    SCC_Component scc;
+    if (parameters.source > -1 && parameters.destination > -1) {
+        scc = SplitUnaccessibleLocations(number_of_locations, ftse_table);
+    } else {
+        scc = SplitUnaccessibleLocations(number_of_locations, result_table);
+    }
 
     std::vector<std::vector<NodeID>> trips;
     trips.reserve(scc.GetNumberOfComponents());
@@ -211,16 +245,26 @@ Status TripPlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
 
         if (component_size > 1)
         {
-
             if (component_size < BF_MAX_FEASABLE)
             {
-                scc_route =
-                    trip::BruteForceTrip(route_begin, route_end, number_of_locations, result_table);
+                if (parameters.source > -1 && parameters.destination > -1) {
+                    scc_route =
+                        trip::BruteForceTrip(route_begin, route_end, number_of_locations, ftse_table);
+                } else {
+                    scc_route =
+                        trip::BruteForceTrip(route_begin, route_end, number_of_locations, result_table);
+                }
             }
             else
             {
-                scc_route = trip::FarthestInsertionTrip(
-                    route_begin, route_end, number_of_locations, result_table);
+                if (parameters.source > -1 && parameters.destination > -1) {
+                    scc_route = trip::FarthestInsertionTrip(
+                        route_begin, route_end, number_of_locations, ftse_table);
+                } else {
+                    scc_route = trip::FarthestInsertionTrip(
+                        route_begin, route_end, number_of_locations, result_table);
+                }
+                
             }
         }
         else
