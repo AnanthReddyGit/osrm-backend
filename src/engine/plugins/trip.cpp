@@ -189,45 +189,86 @@ Status TripPlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
     BOOST_ASSERT_MSG(result_table.size() == number_of_locations * number_of_locations,
                      "Distance Table has wrong size");
 
-    // std::for_each(std::begin(result_table), std::end(result_table), [](const auto value) {
-    //     std::cout << "table_value: " << value << std::endl;
+    // std::for_each(std::begin(result_table), std::end(result_table), [](int nums) {
+    //     std::cout << "number " << nums;
     //   });
 
-    std::vector<EdgeWeight> ftse_table;
+    std::cout << "result_table_value: " << result_table(parameters.source, parameters.destination) << std::endl;
+    std::vector<EdgeWeight> ftse_table_;
+    std::vector<EdgeWeight> result_table_ = result_table.GetTable();
+
+    std::cout << "result_table_: ";
+    for (auto i : result_table_) {
+        std::cout << ' ' << i;
+    }
+    std::cout << '\n';
+
     const std::size_t number_of_nodes = result_table.GetNumberOfNodes() - 1;
-    ftse_table.reserve(number_of_nodes * number_of_nodes);
+    std::cout << "number_of_nodes: " << number_of_nodes << std::endl;
+
+    ftse_table_.resize(number_of_nodes * number_of_nodes);
 
     if (parameters.source > -1 && parameters.destination > -1) {
 
-        NodeID from = parameters.source;
-        NodeID to = parameters.destination;
+        NodeID from = parameters.source; // 2
+        NodeID to = parameters.destination;  // 0
 
-        for (auto index = 0; index < result_table.size(); ++index) {
-            if (index % number_of_nodes == to) { //do the to thing
-                ftse_table[index - to] = result_table[index];
+        for (std::size_t index = 0; index < result_table.size(); ++index) {
+
+            if (index % number_of_nodes == to) { // do the to thing
+                ftse_table_[index - to] = result_table_[index];
                 index++;
             }
-
-            // if (index % number_of_nodes == 0) { // do the from thing
-                // index = index + number_of_nodes;
-            // }
 
             if (to * number_of_nodes == index) { // do the from thing
                 index = index + number_of_nodes;
             }
 
-            ftse_table[index] = result_table[index];
+//      0   1  .2   3   4       5   6  .7   8   9     10  11 .12  13  14     15  16 .17  18  19     20  21 .22  23  24
+// a->  a   b  .c   d   e   b-> a   b  .c   d   e  c->a   b  .c   d   e   d->a   b  .c   d   e   e->a   b  .c   d   e
+
+
+//      0   1   2   3      4   5   6   7     8   9   10  11     12  13  14  15
+// ca-> ca  b   d   e  b->ca   b   d   e  d->ca  b   d   e   e->ca  b   d   e   
+
+            // if (index % number_of_nodes == 0) { 
+                // index = index + number_of_nodes;
+            // }
+
+            //from = 2
+            //to = 0
+
+            //i = 0
+
+            // 0   1   2  3
+            // 0   15  30  25 
+            // 15  0   34  20
+            // 30  34  0   18
+            // 25  20  18  0
+
+            // 5 15 0
+            // 0 15 0
+            // 0 0  0
+
+            ftse_table_[index] = result_table_[index];
         }
 
-        ftse_table[from * number_of_nodes + from] = 0;
+        ftse_table_[from * number_of_nodes + from] = 0;
     }
 
+    std::cout << "ftse_table_: ";
+    for (auto i : ftse_table_) {
+        std::cout << ' ' << i;
+    }
+    std::cout << '\n';
+
+
+    const auto ftse_table = util::DistTableWrapper<EdgeWeight>(ftse_table_, number_of_nodes);
+
     // get scc components
-    SCC_Component scc;
+    SCC_Component scc = SplitUnaccessibleLocations(number_of_locations, result_table);
     if (parameters.source > -1 && parameters.destination > -1) {
-        scc = SplitUnaccessibleLocations(number_of_locations, ftse_table);
-    } else {
-        scc = SplitUnaccessibleLocations(number_of_locations, result_table);
+        SCC_Component scc2 = SplitUnaccessibleLocations(number_of_locations, ftse_table);
     }
 
     std::vector<std::vector<NodeID>> trips;
