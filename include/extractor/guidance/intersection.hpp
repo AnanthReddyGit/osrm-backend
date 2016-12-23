@@ -14,7 +14,9 @@
 
 #include "extractor/guidance/turn_instruction.hpp"
 
+#include <boost/range/algorithm/min_element.hpp>
 #include <boost/range/algorithm/find_if.hpp>
+#include <boost/range/algorithm/count_if.hpp>
 
 namespace osrm
 {
@@ -46,8 +48,6 @@ inline auto makeCompareAngularDeviation(const double angle)
     };
 }
 
-// this template is a workaround for windows, since windows does not accept `auto` here as a
-// parameter type for the `lane_extraction`
 inline auto makeExtractLanesForRoad(const util::NodeBasedDynamicGraph &node_based_graph)
 {
     return [&node_based_graph](const auto &road) {
@@ -124,21 +124,21 @@ std::string toString(const ConnectedRoad &road);
 template <typename Self> struct EnableShapeOps
 {
     // same as closest turn, but for bearings
-    auto findClosestBearing(double bearing) const
+    auto FindClosestBearing(double bearing) const
     {
         auto comp = makeCompareShapeDataByBearing(bearing);
         return std::min_element(self()->begin(), self()->end(), comp);
     }
 
     // search a given eid in the intersection
-    auto findEid(const EdgeID eid) const
+    auto FindEid(const EdgeID eid) const
     {
-        return std::find_if(
-            self()->begin(), self()->end(), [eid](const auto &road) { return road.eid == eid; });
+        return boost::range::find_if(
+            *self(), [eid](const auto &road) { return road.eid == eid; });
     }
 
     // find the maximum value based on a conversion operator
-    template <typename UnaryPredicate> auto findMaximum(const UnaryPredicate converter) const
+    template <typename UnaryProjection> auto FindMaximum(UnaryProjection converter) const
     {
         BOOST_ASSERT(!self()->empty());
         auto initial = converter(self()->front());
@@ -153,10 +153,10 @@ template <typename Self> struct EnableShapeOps
     }
 
     // find the maximum value based on a conversion operator and a predefined initial value
-    template <typename UnaryPredicate> auto count(const UnaryPredicate detector) const
+    template <typename UnaryPredicate> auto Count(UnaryPredicate detector) const
     {
         BOOST_ASSERT(!self()->empty());
-        return std::count_if(self()->begin(), self()->end(), detector);
+        return boost::range::count_if(*self(), detector);
     }
 
   private:
@@ -179,7 +179,7 @@ template <typename Self> struct EnableIntersectionOps
     auto findClosestTurn(double angle) const
     {
         auto comp = makeCompareAngularDeviation(angle);
-        return std::min_element(self()->begin(), self()->end(), comp);
+        return boost::range::min_element(*self(), comp);
     }
 
     /* Check validity of the intersection object. We assume a few basic properties every set of
@@ -228,14 +228,14 @@ template <typename Self> struct EnableIntersectionOps
     auto isDeadEnd() const
     {
         auto pred = [](const auto &road) { return road.entry_allowed; };
-        return !std::any_of(self()->begin() + 1, self()->end(), pred);
+        return std::none_of(self()->begin() + 1, self()->end(), pred);
     }
 
     // Returns the number of roads we can enter at this intersection, respectively.
     auto countEnterable() const
     {
         auto pred = [](const auto &road) { return road.entry_allowed; };
-        return std::count_if(self()->begin(), self()->end(), pred);
+        return boost::range::count_if(*self(), pred);
     }
 
     // Returns the number of roads we can not enter at this intersection, respectively.
@@ -246,8 +246,9 @@ template <typename Self> struct EnableIntersectionOps
     template <typename UnaryPredicate>
     auto findClosestTurn(const double angle, const UnaryPredicate filter) const
     {
-        const auto candidate = std::min_element(
-            self()->begin(), self()->end(), [angle, &filter](const auto &lhs, const auto &rhs) {
+        BOOST_ASSERT(!self()->empty());
+        const auto candidate = boost::range::min_element(
+            *self(), [angle, &filter](const auto &lhs, const auto &rhs) {
                 const auto filtered_lhs = filter(lhs), filtered_rhs = filter(rhs);
                 const auto deviation_lhs = util::angularDeviation(lhs.angle, angle),
                            deviation_rhs = util::angularDeviation(rhs.angle, angle);

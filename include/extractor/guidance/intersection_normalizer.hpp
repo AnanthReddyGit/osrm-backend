@@ -8,6 +8,7 @@
 #include "extractor/guidance/coordinate_extractor.hpp"
 #include "extractor/guidance/intersection.hpp"
 #include "extractor/guidance/intersection_generator.hpp"
+#include "extractor/guidance/intersection_normalization_operation.hpp"
 #include "extractor/guidance/mergable_road_detector.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/suffix_table.hpp"
@@ -36,6 +37,11 @@ namespace guidance
 class IntersectionNormalizer
 {
   public:
+    struct NormalizationResult
+    {
+        IntersectionShape normalized_shape;
+        std::vector<IntersectionNormalizationOperation> performed_merges;
+    };
     IntersectionNormalizer(const util::NodeBasedDynamicGraph &node_based_graph,
                            const std::vector<extractor::QueryNode> &node_coordinates,
                            const util::NameTable &name_table,
@@ -45,8 +51,8 @@ class IntersectionNormalizer
     // The function takes an intersection an converts it to a `perceived` intersection which closer
     // represents how a human might experience the intersection
     OSRM_ATTR_WARN_UNUSED
-    std::pair<IntersectionShape, std::vector<std::pair<EdgeID, EdgeID>>>
-    operator()(const NodeID node_at_intersection, IntersectionShape intersection) const;
+    NormalizationResult operator()(const NodeID node_at_intersection,
+                                   IntersectionShape intersection) const;
 
   private:
     const util::NodeBasedDynamicGraph &node_based_graph;
@@ -70,11 +76,12 @@ class IntersectionNormalizer
                   std::size_t second_index) const;
 
     // Perform an Actual Merge
-    std::pair<EdgeID, EdgeID> DetermineMergeDirection(const IntersectionShapeData &lhs,
-                                                      const IntersectionShapeData &rhs) const;
+    IntersectionNormalizationOperation
+    DetermineMergeDirection(const IntersectionShapeData &lhs,
+                            const IntersectionShapeData &rhs) const;
     IntersectionShapeData MergeRoads(const IntersectionShapeData &destination,
                                      const IntersectionShapeData &source) const;
-    IntersectionShapeData MergeRoads(const std::pair<EdgeID, EdgeID> direction,
+    IntersectionShapeData MergeRoads(const IntersectionNormalizationOperation direction,
                                      const IntersectionShapeData &lhs,
                                      const IntersectionShapeData &rhs) const;
 
@@ -90,8 +97,8 @@ class IntersectionNormalizer
     // The treatment results in a straight turn angle of 180º rather than a turn angle of approx
     // 160
     OSRM_ATTR_WARN_UNUSED
-    std::pair<IntersectionShape, std::vector<std::pair<EdgeID, EdgeID>>>
-    MergeSegregatedRoads(const NodeID intersection_node, IntersectionShape intersection) const;
+    NormalizationResult MergeSegregatedRoads(const NodeID intersection_node,
+                                             IntersectionShape intersection) const;
 
     // The counterpiece to mergeSegregatedRoads. While we can adjust roads that split up at the
     // intersection itself, it can also happen that intersections are connected to joining roads.

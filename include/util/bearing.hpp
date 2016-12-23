@@ -4,7 +4,6 @@
 #include <algorithm>
 #include <boost/assert.hpp>
 #include <cmath>
-#include <cmath>
 #include <string>
 
 namespace osrm

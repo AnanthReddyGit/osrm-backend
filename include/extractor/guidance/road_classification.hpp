@@ -1,7 +1,6 @@
 #ifndef OSRM_EXTRACTOR_CLASSIFICATION_DATA_HPP_
 #define OSRM_EXTRACTOR_CLASSIFICATION_DATA_HPP_
 
-#include <cstdlib>
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
@@ -105,7 +104,7 @@ class RoadClassification
         return motorway_class == other.motorway_class && link_class == other.link_class &&
                may_be_ignored == other.may_be_ignored &&
                road_priority_class == other.road_priority_class;
-   }
+    }
 
     bool operator!=(const RoadClassification &other) const { return !(*this == other); }
 

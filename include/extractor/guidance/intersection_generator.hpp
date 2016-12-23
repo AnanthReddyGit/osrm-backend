@@ -4,6 +4,7 @@
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/guidance/coordinate_extractor.hpp"
 #include "extractor/guidance/intersection.hpp"
+#include "extractor/guidance/intersection_normalization_operation.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/restriction_map.hpp"
 #include "util/attributes.hpp"
@@ -105,7 +106,7 @@ class IntersectionGenerator
         const EdgeID entering_via_edge,
         const IntersectionShape &normalised_intersection,
         const IntersectionShape &intersection,
-        const std::vector<std::pair<EdgeID, EdgeID>> &merging_map) const;
+        const std::vector<IntersectionNormalizationOperation> &merging_map) const;
 
   private:
     const util::NodeBasedDynamicGraph &node_based_graph;

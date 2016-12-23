@@ -27,18 +27,18 @@ operator()(const NodeID intersection_node,
     // request the number of lanes. This process needs to be in sync with what happens over at
     // intersection_generator
     const auto intersection_lanes =
-        intersection.findMaximum(guidance::makeExtractLanesForRoad(node_based_graph));
+        intersection.FindMaximum(guidance::makeExtractLanesForRoad(node_based_graph));
 
     std::vector<util::Coordinate> coordinates;
     coordinates.reserve(intersection.size());
     coordinates.push_back(node_coordinates[intersection_node]);
 
     const auto road_to_coordinate =
-        [&](const extractor::guidance::IntersectionShapeData &connected_road) {
+        [&](const auto &road) {
             const constexpr auto FORWARD = false;
-            const auto to_node = node_based_graph.GetTarget(connected_road.eid);
+            const auto to_node = node_based_graph.GetTarget(road.eid);
             return coordinate_extractor.GetCoordinateAlongRoad(
-                intersection_node, connected_road.eid, FORWARD, to_node, intersection_lanes);
+                intersection_node, road.eid, FORWARD, to_node, intersection_lanes);
         };
 
     std::transform(intersection.begin(),

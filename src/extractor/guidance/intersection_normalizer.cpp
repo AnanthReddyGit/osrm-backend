@@ -30,29 +30,14 @@ IntersectionNormalizer::IntersectionNormalizer(
 {
 }
 
-std::pair<IntersectionShape, std::vector<std::pair<EdgeID, EdgeID>>> IntersectionNormalizer::
+IntersectionNormalizer::NormalizationResult IntersectionNormalizer::
 operator()(const NodeID node_at_intersection, IntersectionShape intersection) const
 {
     const auto intersection_copy = intersection;
     auto merged_shape_and_merges =
         MergeSegregatedRoads(node_at_intersection, std::move(intersection));
-    if (!merged_shape_and_merges.second.empty())
-    {
-        IntersectionShape reduced_shape;
-        for (auto road : intersection_copy)
-        {
-            if (merged_shape_and_merges.second.end() !=
-                std::find_if(merged_shape_and_merges.second.begin(),
-                             merged_shape_and_merges.second.end(),
-                             [road](const auto &val) {
-                                 return road.eid == val.first || road.eid == val.second;
-                             }))
-                reduced_shape.push_back(road);
-        }
-    }
-
-    merged_shape_and_merges.first = AdjustBearingsForMergeAtDestination(
-        node_at_intersection, std::move(merged_shape_and_merges.first));
+    merged_shape_and_merges.normalized_shape = AdjustBearingsForMergeAtDestination(
+        node_at_intersection, std::move(merged_shape_and_merges.normalized_shape));
     return merged_shape_and_merges;
 }
 
@@ -77,20 +62,21 @@ bool IntersectionNormalizer::CanMerge(const NodeID intersection_node,
      * In that case, we cannot merge, since we would end up merging multiple items together
      */
     const auto is_distinct = [&]() {
-        return mergable_road_detector.IsDistinctFrom(
-                   intersection[second_index_in_ccw],
-                   intersection[(second_index_in_ccw + 1) % intersection.size()]) &&
-               mergable_road_detector.IsDistinctFrom(
-                   intersection[(fist_index_in_ccw + intersection.size() - 1) %
-                                intersection.size()],
-                   intersection[fist_index_in_ccw]);
+        const auto next_index_in_ccw = (second_index_in_ccw + 1) % intersection.size();
+        const auto distinct_to_next_in_ccw = mergable_road_detector.IsDistinctFrom(
+            intersection[second_index_in_ccw], intersection[next_index_in_ccw]);
+        const auto prev_index_in_ccw =
+            (fist_index_in_ccw + intersection.size() - 1) % intersection.size();
+        const auto distinct_to_prev_in_ccw = mergable_road_detector.IsDistinctFrom(
+            intersection[prev_index_in_ccw], intersection[fist_index_in_ccw]);
+        return distinct_to_next_in_ccw && distinct_to_prev_in_ccw;
     };
 
     // use lazy evaluation to check only if mergable
     return can_merge && is_distinct();
 }
 
-std::pair<EdgeID, EdgeID>
+IntersectionNormalizationOperation
 IntersectionNormalizer::DetermineMergeDirection(const IntersectionShapeData &lhs,
                                                 const IntersectionShapeData &rhs) const
 {
@@ -131,11 +117,12 @@ IntersectionShapeData IntersectionNormalizer::MergeRoads(const IntersectionShape
     return result;
 }
 
-IntersectionShapeData IntersectionNormalizer::MergeRoads(const std::pair<EdgeID, EdgeID> direction,
-                                                         const IntersectionShapeData &lhs,
-                                                         const IntersectionShapeData &rhs) const
+IntersectionShapeData
+IntersectionNormalizer::MergeRoads(const IntersectionNormalizationOperation direction,
+                                   const IntersectionShapeData &lhs,
+                                   const IntersectionShapeData &rhs) const
 {
-    if (direction.first == lhs.eid)
+    if (direction.merged_eid == lhs.eid)
         return MergeRoads(rhs, lhs);
     else
         return MergeRoads(lhs, rhs);
@@ -164,7 +151,7 @@ IntersectionShapeData IntersectionNormalizer::MergeRoads(const std::pair<EdgeID,
  * Anything containing the first u-turn in a merge affects all other angles
  * and is handled separately from all others.
  */
-std::pair<IntersectionShape, std::vector<std::pair<EdgeID, EdgeID>>>
+IntersectionNormalizer::NormalizationResult
 IntersectionNormalizer::MergeSegregatedRoads(const NodeID intersection_node,
                                              IntersectionShape intersection) const
 {
@@ -174,21 +161,21 @@ IntersectionNormalizer::MergeSegregatedRoads(const NodeID intersection_node,
 
     // This map stores for all edges that participated in a merging operation in which edge id they
     // end up in the end. We only store what we have merged into other edges.
-    std::vector<std::pair<EdgeID, EdgeID>> merging_map;
+    std::vector<IntersectionNormalizationOperation> merging_map;
     const auto merge = [this, &merging_map](const IntersectionShapeData &first,
                                             const IntersectionShapeData &second) {
 
         const auto direction = DetermineMergeDirection(first, second);
         BOOST_ASSERT(
             std::find_if(merging_map.begin(), merging_map.end(), [direction](const auto pair) {
-                return pair.first == direction.first;
+                return pair.merged_eid == direction.merged_eid;
             }) == merging_map.end());
         merging_map.push_back(direction);
         return MergeRoads(direction, first, second);
     };
 
     if (intersection.size() <= 1)
-        return std::make_pair(intersection, merging_map);
+        return {intersection, merging_map};
 
     const auto intersection_copy = intersection;
     // check for merges including the basic u-turn
@@ -249,7 +236,7 @@ IntersectionNormalizer::MergeSegregatedRoads(const NodeID intersection_node,
             --index;
         }
     }
-    return std::make_pair(intersection, merging_map);
+    return {intersection, merging_map};
 }
 
 // OSM can have some very steep angles for joining roads. Considering the following intersection:

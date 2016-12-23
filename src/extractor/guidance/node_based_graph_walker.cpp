@@ -21,11 +21,8 @@ NodeBasedGraphWalker::NodeBasedGraphWalker(const util::NodeBasedDynamicGraph &no
 }
 
 LengthLimitedCoordinateAccumulator::LengthLimitedCoordinateAccumulator(
-    const extractor::guidance::CoordinateExtractor &coordinate_extractor,
-    const util::NodeBasedDynamicGraph &node_based_graph,
-    const double max_length)
-    : coordinate_extractor(coordinate_extractor), node_based_graph(node_based_graph),
-      max_length(max_length), accumulated_length(0)
+    const extractor::guidance::CoordinateExtractor &coordinate_extractor, const double max_length)
+    : accumulated_length(0), coordinate_extractor(coordinate_extractor), max_length(max_length)
 {
 }
 
@@ -40,8 +37,10 @@ void LengthLimitedCoordinateAccumulator::update(const NodeID from_node,
     auto current_coordinates =
         coordinate_extractor.GetForwardCoordinatesAlongRoad(from_node, via_edge);
 
-    const auto length = util::coordinate_calculation::getLength(
-        current_coordinates, util::coordinate_calculation::haversineDistance);
+    const auto length =
+        util::coordinate_calculation::getLength(current_coordinates.begin(),
+                                                current_coordinates.end(),
+                                                util::coordinate_calculation::haversineDistance);
 
     // in case we get too many coordinates, we limit them to our desired length
     if (length + accumulated_length > max_length)

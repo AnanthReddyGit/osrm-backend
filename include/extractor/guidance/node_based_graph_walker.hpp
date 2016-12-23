@@ -57,7 +57,6 @@ struct LengthLimitedCoordinateAccumulator
 {
     LengthLimitedCoordinateAccumulator(
         const extractor::guidance::CoordinateExtractor &coordinate_extractor,
-        const util::NodeBasedDynamicGraph &node_based_graph,
         const double max_length);
 
     /*
@@ -78,11 +77,12 @@ struct LengthLimitedCoordinateAccumulator
      */
     void update(const NodeID from_node, const EdgeID via_edge, const NodeID to_node);
 
-    const extractor::guidance::CoordinateExtractor &coordinate_extractor;
-    const util::NodeBasedDynamicGraph &node_based_graph;
-    const double max_length;
-    double accumulated_length;
+    double accumulated_length = 0;
     std::vector<util::Coordinate> coordinates;
+
+  private:
+    const extractor::guidance::CoordinateExtractor &coordinate_extractor;
+    const double max_length;
 };
 
 /*
@@ -108,6 +108,7 @@ struct SelectRoadByNameOnlyChoiceAndStraightness
                                        const IntersectionView &intersection,
                                        const util::NodeBasedDynamicGraph &node_based_graph) const;
 
+  private:
     const NameID desired_name_id;
     const bool requires_entry;
 };
@@ -132,6 +133,7 @@ struct SelectStraightmostRoadByNameAndOnlyChoice
                                        const IntersectionView &intersection,
                                        const util::NodeBasedDynamicGraph &node_based_graph) const;
 
+  private:
     const NameID desired_name_id;
     const double initial_bearing;
     const bool requires_entry;
@@ -192,8 +194,8 @@ NodeBasedGraphWalker::TraverseRoad(NodeID current_node_id,
 
         // look at the next intersection
         const constexpr auto LOW_PRECISION = true;
-        const auto next_intersection =
-            intersection_generator.GetConnectedRoads(current_node_id, current_edge_id, LOW_PRECISION);
+        const auto next_intersection = intersection_generator.GetConnectedRoads(
+            current_node_id, current_edge_id, LOW_PRECISION);
 
         // don't follow u-turns or go past our initial intersection
         if (next_intersection.size() <= 1)
@@ -261,7 +263,7 @@ struct DistanceToNextIntersectionAccumulator
         using namespace util::coordinate_calculation;
 
         const auto coords = extractor.GetForwardCoordinatesAlongRoad(start, onto);
-        distance += getLength(coords, &haversineDistance);
+        distance += getLength(coords.begin(), coords.end(), &haversineDistance);
     }
 
     const extractor::guidance::CoordinateExtractor &extractor;

@@ -377,33 +377,31 @@ double findTotalTurnAngle(const RouteStep &entry_step, const RouteStep &exit_ste
          (entry_angle <= 185 && exit_angle <= 185) || (entry_angle >= 175 && exit_angle >= 175)) &&
         angularDeviation(total_angle, 180) > 20)
     {
-        /* both angles are in the same direction, the total turn gets increased
-         *
-         * a ---- b
-         *           \
-         *              c
-         *              |
-         *              d
-         *
-         * Will be considered just like
-         * a -----b
-         *        |
-         *        c
-         *        |
-         *        d
-         */
+        // both angles are in the same direction, the total turn gets increased
+        //
+        // a ---- b
+        //           \
+        //              c
+        //              |
+        //              d
+        //
+        // Will be considered just like
+        // a -----b
+        //        |
+        //        c
+        //        |
+        //        d
         return total_angle;
     }
     else
     {
-        /* to prevent ignoring angles like
-         * a -- b
-         *      |
-         *      c -- d
-         * We don't combine both turn angles here but keep the very first turn angle.
-         * We choose the first one, since we consider the first maneuver in a merge range the
-         * important one
-         */
+        // to prevent ignoring angles like
+        // a -- b
+        //      |
+        //      c -- d
+        // We don't combine both turn angles here but keep the very first turn angle.
+        // We choose the first one, since we consider the first maneuver in a merge range the
+        // important one
         return entry_angle;
     }
 }
@@ -432,9 +430,8 @@ void collapseUTurn(std::vector<RouteStep> &steps,
     // the simple case is a u-turn that changes directly into the in-name again
     const bool direct_u_turn = !isNoticeableNameChange(steps[two_back_index], current_step);
 
-    /* however, we might also deal with a dual-collapse scenario in which we have to
-     * additionall collapse a name-change as well
-     */
+    // however, we might also deal with a dual-collapse scenario in which we have to
+    // additionall collapse a name-change as well
     const auto next_step_index = step_index + 1;
     const bool continues_with_name_change =
         (next_step_index < steps.size()) && compatible(steps[step_index], steps[next_step_index]) &&
@@ -456,9 +453,9 @@ void collapseUTurn(std::vector<RouteStep> &steps,
                              "Compatibility should be transitive");
             steps[one_back_index] =
                 elongate(std::move(steps[one_back_index]), steps[next_step_index]);
-            invalidateStep(steps[next_step_index]); /* will be skipped due to the
-                                                     * continue statement at the
-                                                     * beginning of this function */
+            invalidateStep(steps[next_step_index]); // will be skipped due to the
+                                                    // continue statement at the
+                                                    // beginning of this function
         }
         forwardStepSignage(steps[one_back_index], steps[two_back_index]);
         steps[one_back_index].maneuver.instruction.type = TurnType::Continue;
@@ -518,10 +515,10 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
             const auto is_not_too_long_and_choiceless =
                 opening_turn.distance <= 2 * MAX_COLLAPSE_DISTANCE && without_choice;
 
-            /* for ramps we allow longer stretches, since they are often on some major brides/large
-             * roads. A combined distance of of 4 intersections would be to long for a normal
-             * collapse. In case of a ramp though, we also account for situations that have the ramp
-             * tagged late */
+            // for ramps we allow longer stretches, since they are often on some major brides/large
+            // roads. A combined distance of of 4 intersections would be to long for a normal
+            // collapse. In case of a ramp though, we also account for situations that have the ramp
+            // tagged late
             const auto is_delayed_turn_onto_a_ramp =
                 opening_turn.distance <= 4 * MAX_COLLAPSE_DISTANCE && without_choice &&
                 hasRampType(finishing_turn.maneuver.instruction);
@@ -589,32 +586,32 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
                 const auto bearing_turn_angle = util::bearing::angleBetween(
                     in_bearing(one_back_step), out_bearing(current_step));
 
-                /* When looking at an intersection, some angles, even though present, feel more like
-                 * a straight turn. This happens most often at segregated intersections.
-                 * We consider two cases
-                 * I) a shift in the road:
-                 *
-                 * a       g      h
-                 *     .   |      |
-                 *         b ---- c
-                 *         |      |    .
-                 *         f      e        d
-                 *
-                 * Where a-d technicall continues straight, even though the shift models it as a
-                 * slight left and a slight right turn.
-                 *
-                 * II) A curved road
-                 *
-                 *         g      h
-                 *         |      |
-                 *         b ---- c
-                 *    .    |      |    .
-                 * a       f      e        d
-                 *
-                 * where a-d is a curve passing by an intersection.
-                 *
-                 * We distinguish this case from other bearings though where the interpretation as
-                 * straight would end up disguising turns. */
+                // When looking at an intersection, some angles, even though present, feel more like
+                // a straight turn. This happens most often at segregated intersections.
+                // We consider two cases
+                // I) a shift in the road:
+                //
+                // a       g      h
+                //     .   |      |
+                //         b ---- c
+                //         |      |    .
+                //         f      e        d
+                //
+                // Where a-d technicall continues straight, even though the shift models it as a
+                // slight left and a slight right turn.
+                //
+                // II) A curved road
+                //
+                //         g      h
+                //         |      |
+                //         b ---- c
+                //    .    |      |    .
+                // a       f      e        d
+                //
+                // where a-d is a curve passing by an intersection.
+                //
+                // We distinguish this case from other bearings though where the interpretation as
+                // straight would end up disguising turns.
 
                 // check if there is another similar turn next to the turn itself
                 const auto hasSimilarAngle = [&](const std::size_t index,
@@ -629,9 +626,9 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
                 };
 
                 const auto is_shift_or_curve = [&]() -> bool {
-                    /* since we move an intersection modifier from a slight turn to a straight, we
-                     * need to make sure that there is not a similar angle which could prevent this
-                     * perception of angles to be true. */
+                    // since we move an intersection modifier from a slight turn to a straight, we
+                    // need to make sure that there is not a similar angle which could prevent this
+                    // perception of angles to be true.
                     if (hasSimilarAngle(one_back_step.intersections.front().in,
                                         one_back_step.intersections.front().bearings) ||
                         hasSimilarAngle(current_step.intersections.front().out,
@@ -642,14 +639,14 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
                     if (angularDeviation(first_angle, second_angle) <
                         extractor::guidance::FUZZY_ANGLE_DIFFERENCE)
                     {
-                        /* We limit perceptive angles to narrow turns. If the total turn is going to
-                         * be not-narrow, we assume it to be more than a simple curve. */
+                        // We limit perceptive angles to narrow turns. If the total turn is going to
+                        // be not-narrow, we assume it to be more than a simple curve.
                         return angularDeviation(bearing_turn_angle,
                                                 extractor::guidance::STRAIGHT_ANGLE) <
                                extractor::guidance::NARROW_TURN_ANGLE;
                     }
-                    /* if one of the angles is a left turn and the other one is a right turn, we
-                     * nearly reverse the angle */
+                    // if one of the angles is a left turn and the other one is a right turn, we
+                    // nearly reverse the angle
                     else if ((first_angle > extractor::guidance::STRAIGHT_ANGLE) !=
                              (second_angle > extractor::guidance::STRAIGHT_ANGLE))
                     {
@@ -808,15 +805,15 @@ bool isStaggeredIntersection(const std::vector<RouteStep> &steps,
         return util::bearing::angleBetween(entry_bearing, exit_bearing);
     };
 
-    /* Instead of using turn modifiers (e.g. as in isRightTurn) we want to be more strict here.
-     * We do not want to trigger e.g. on sharp uturn'ish turns or going straight "turns".
-     * Therefore we use the turn angle to derive 90 degree'ish right / left turns.
-     * This more closely resembles what we understand as Staggered Intersection.
-     * We have to be careful in cases with larger MAX_STAGGERED_DISTANCE values. If the distance
-     * gets large, sharper angles might be not obvious enough to consider them a staggered
-     * intersection. We might need to consider making the decision here dependent on the actual turn
-     * angle taken. To do so, we could scale the angle-limits by a factor depending on the distance
-     * between the turns. */
+    // Instead of using turn modifiers (e.g. as in isRightTurn) we want to be more strict here.
+    // We do not want to trigger e.g. on sharp uturn'ish turns or going straight "turns".
+    // Therefore we use the turn angle to derive 90 degree'ish right / left turns.
+    // This more closely resembles what we understand as Staggered Intersection.
+    // We have to be careful in cases with larger MAX_STAGGERED_DISTANCE values. If the distance
+    // gets large, sharper angles might be not obvious enough to consider them a staggered
+    // intersection. We might need to consider making the decision here dependent on the actual turn
+    // angle taken. To do so, we could scale the angle-limits by a factor depending on the distance
+    // between the turns.
     const auto is_right = [](const double angle) { return angle > 45 && angle < 135; };
     const auto is_left = [](const double angle) { return angle > 225 && angle < 315; };
 
@@ -909,10 +906,10 @@ RouteStep elongate(RouteStep step, const RouteStep &by_step)
 
 std::vector<RouteStep> removeNoTurnInstructions(std::vector<RouteStep> steps)
 {
-    /* finally clean up the post-processed instructions.
-     * Remove all invalid instructions from the set of instructions.
-     * An instruction is invalid, if its NO_TURN and has WaypointType::None.
-     * Two valid NO_TURNs exist in each leg in the form of Depart/Arrive */
+    // finally clean up the post-processed instructions.
+    // Remove all invalid instructions from the set of instructions.
+    // An instruction is invalid, if its NO_TURN and has WaypointType::None.
+    // Two valid NO_TURNs exist in each leg in the form of Depart/Arrive
 
     // keep valid instructions
     const auto not_is_valid = [](const RouteStep &step) {
@@ -938,12 +935,12 @@ std::vector<RouteStep> removeNoTurnInstructions(std::vector<RouteStep> steps)
     return steps;
 }
 
-/* Every Step Maneuver consists of the information until the turn.
- * This list contains a set of instructions, called silent, which should
- * not be part of the final output.
- * They are required for maintenance purposes. We can calculate the number
- * of exits to pass in a roundabout and the number of intersections
- * that we come across. */
+// Every Step Maneuver consists of the information until the turn.
+// This list contains a set of instructions, called silent, which should
+// not be part of the final output.
+// They are required for maintenance purposes. We can calculate the number
+// of exits to pass in a roundabout and the number of intersections
+// that we come across.
 std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
 {
     // the steps should always include the first/last step in form of a location
@@ -955,10 +952,10 @@ std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
     bool on_roundabout = false;
     bool has_entered_roundabout = false;
 
-    /* count the exits forward. if enter/exit roundabout happen both, no further treatment is
-     * required. We might end up with only one of them (e.g. starting within a roundabout)
-     * or having a via-point in the roundabout.
-     * In this case, exits are numbered from the start of the leg. */
+    // count the exits forward. if enter/exit roundabout happen both, no further treatment is
+    // required. We might end up with only one of them (e.g. starting within a roundabout)
+    // or having a via-point in the roundabout.
+    // In this case, exits are numbered from the start of the leg.
     for (std::size_t step_index = 0; step_index < steps.size(); ++step_index)
     {
         const auto next_step_index = step_index + 1;
@@ -981,10 +978,10 @@ std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
         }
         else if (leavesRoundabout(instruction))
         {
-            /* if (!has_entered_roundabout)
-             * in case the we are not on a roundabout, the very first instruction
-             * after the depart will be transformed into a roundabout and become
-             * the first valid instruction */
+            // if (!has_entered_roundabout)
+            // in case the we are not on a roundabout, the very first instruction
+            // after the depart will be transformed into a roundabout and become
+            // the first valid instruction
             closeOffRoundabout(has_entered_roundabout, steps, step_index);
             has_entered_roundabout = false;
             on_roundabout = false;
@@ -995,9 +992,9 @@ std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
         }
     }
 
-    /* unterminated roundabout
-     * Move backwards through the instructions until the start and remove the exit number
-     * A roundabout without exit translates to enter-roundabout.*/
+    // unterminated roundabout
+    // Move backwards through the instructions until the start and remove the exit number
+    // A roundabout without exit translates to enter-roundabout
     if (has_entered_roundabout || on_roundabout)
     {
         fixFinalRoundabout(steps);
@@ -1271,32 +1268,32 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
     return removeNoTurnInstructions(std::move(steps));
 }
 
-/* Doing this step in post-processing provides a few challenges we cannot overcome.
- * The removal of an initial step imposes some copy overhead in the steps, moving all later
- * steps to the front. In addition, we cannot reduce the travel time that is accumulated at a
- * different location.
- * As a direct implication, we have to keep the time of the initial/final turns (which adds a
- * few seconds of inaccuracy at both ends. This is acceptable, however, since the turn should
- * usually not be as relevant. */
+// Doing this step in post-processing provides a few challenges we cannot overcome.
+// The removal of an initial step imposes some copy overhead in the steps, moving all later
+// steps to the front. In addition, we cannot reduce the travel time that is accumulated at a
+// different location.
+// As a direct implication, we have to keep the time of the initial/final turns (which adds a
+// few seconds of inaccuracy at both ends. This is acceptable, however, since the turn should
+// usually not be as relevant.
 void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
 {
     if (steps.size() < 2 || geometry.locations.size() <= 2)
         return;
 
-    /* if phantom node is located at the connection of two segments, either one can be selected
-     * as
-     * turn
-     *
-     * a --- b
-     *       |
-     *       c
-     *
-     * If a route from b to c is requested, both a--b and b--c could be selected as start
-     * segment.
-     * In case of a--b, we end up with an unwanted turn saying turn-right onto b-c.
-     * These cases start off with an initial segment which is of zero length.
-     * We have to be careful though, since routing that starts in a roundabout has a valid.
-     * To catch these cases correctly, we have to perform trimming prior to the post-processing */
+    // if phantom node is located at the connection of two segments, either one can be selected
+    // as
+    // turn
+    //
+    // a --- b
+    //       |
+    //       c
+    //
+    // If a route from b to c is requested, both a--b and b--c could be selected as start
+    // segment.
+    // In case of a--b, we end up with an unwanted turn saying turn-right onto b-c.
+    // These cases start off with an initial segment which is of zero length.
+    // We have to be careful though, since routing that starts in a roundabout has a valid.
+    // To catch these cases correctly, we have to perform trimming prior to the post-processing
 
     BOOST_ASSERT(geometry.locations.size() >= steps.size());
     // Look for distances under 1m
@@ -1324,9 +1321,9 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
         // We have to adjust the first step both for its name and the bearings
         if (zero_length_step)
         {
-            /* since we are not only checking for epsilon but for a full meter, we can have multiple
-             * coordinates here. Move all offsets to the front and reduce by one. (This is an
-             * inplace forward one and reduce by one) */
+            // since we are not only checking for epsilon but for a full meter, we can have multiple
+            // coordinates here. Move all offsets to the front and reduce by one. (This is an
+            // inplace forward one and reduce by one)
             std::transform(geometry.segment_offsets.begin() + 1,
                            geometry.segment_offsets.end(),
                            geometry.segment_offsets.begin(),

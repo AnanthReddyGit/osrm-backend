@@ -79,7 +79,9 @@ IntersectionGenerator::ComputeIntersectionShape(const NodeID node_at_center_of_i
             node_at_center_of_intersection, edge_connected_to_intersection, !INVERT, to_node);
 
         const auto segment_length = util::coordinate_calculation::getLength(
-            coordinates, util::coordinate_calculation::haversineDistance);
+            coordinates.begin(),
+            coordinates.end(),
+            util::coordinate_calculation::haversineDistance);
 
         const auto extract_coordinate = [&](const NodeID from_node,
                                             const EdgeID via_eid,
@@ -209,9 +211,9 @@ IntersectionView IntersectionGenerator::TransformIntersectionShapeIntoView(
 IntersectionView IntersectionGenerator::TransformIntersectionShapeIntoView(
     const NodeID previous_node,
     const EdgeID entering_via_edge,
-    const IntersectionShape &normalised_intersection,
+    const IntersectionShape &normalized_intersection,
     const IntersectionShape &intersection,
-    const std::vector<std::pair<EdgeID, EdgeID>> &performed_merges) const
+    const std::vector<IntersectionNormalizationOperation> &performed_merges) const
 {
     const auto node_at_intersection = node_based_graph.GetTarget(entering_via_edge);
 
@@ -263,34 +265,34 @@ IntersectionView IntersectionGenerator::TransformIntersectionShapeIntoView(
     const auto uturn_bearing = [&]() {
         const auto merge_entry = std::find_if(
             performed_merges.begin(), performed_merges.end(), [&uturn_edge_itr](const auto entry) {
-                return entry.first == uturn_edge_itr->eid;
+                return entry.merged_eid == uturn_edge_itr->eid;
             });
         if (merge_entry != performed_merges.end())
         {
-            const auto merged_into_id = merge_entry->second;
+            const auto merged_into_id = merge_entry->into_eid;
             const auto merged_u_turn = std::find_if(
-                normalised_intersection.begin(),
-                normalised_intersection.end(),
+                normalized_intersection.begin(),
+                normalized_intersection.end(),
                 [&](const IntersectionShapeData &road) { return road.eid == merged_into_id; });
-            BOOST_ASSERT(merged_u_turn != normalised_intersection.end());
+            BOOST_ASSERT(merged_u_turn != normalized_intersection.end());
             return util::bearing::reverse(merged_u_turn->bearing);
         }
         else
         {
-            const auto uturn_edge_at_normalised_intersection_itr =
-                std::find_if(normalised_intersection.begin(),
-                             normalised_intersection.end(),
+            const auto uturn_edge_at_normalized_intersection_itr =
+                std::find_if(normalized_intersection.begin(),
+                             normalized_intersection.end(),
                              connect_to_previous_node);
-            BOOST_ASSERT(uturn_edge_at_normalised_intersection_itr !=
-                         normalised_intersection.end());
-            return util::bearing::reverse(uturn_edge_at_normalised_intersection_itr->bearing);
+            BOOST_ASSERT(uturn_edge_at_normalized_intersection_itr !=
+                         normalized_intersection.end());
+            return util::bearing::reverse(uturn_edge_at_normalized_intersection_itr->bearing);
         }
     }();
 
     IntersectionView intersection_view;
-    intersection_view.reserve(normalised_intersection.size());
-    std::transform(normalised_intersection.begin(),
-                   normalised_intersection.end(),
+    intersection_view.reserve(normalized_intersection.size());
+    std::transform(normalized_intersection.begin(),
+                   normalized_intersection.end(),
                    std::back_inserter(intersection_view),
                    [&](const IntersectionShapeData &road) {
                        return IntersectionViewData(
